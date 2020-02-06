@@ -62,8 +62,6 @@ try:
 
         calculate_erdos_numbers()
 
-        # Print a blank line in every scenario but the last one
-        if (scenario < number_of_cases):
-            print()
+        print()
 except EOFError as err:
     pass
