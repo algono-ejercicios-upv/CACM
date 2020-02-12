@@ -44,7 +44,7 @@ def calculate_erdos_numbers():
             author_coauthors = coauthors.get(author, [])
             if len(author_coauthors) > 0:
                 for coauthor in author_coauthors:
-                    if author_coauthor not in erdos_numbers:
+                    if coauthor not in erdos_numbers:
                         erdos_numbers[coauthor] = current_level + 1
                         next_authors.append(coauthor)
         
