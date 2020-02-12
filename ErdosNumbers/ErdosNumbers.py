@@ -26,14 +26,14 @@ def calculate_erdos_numbers():
             if name in coauthors:
                 coauthors.get(name).update(name_coauthors)
             else:
-                coauthors.setdefault(name, name_coauthors)
+                coauthors[name] = name_coauthors
 
     erdos_numbers = dict()
     current_authors = list()
     next_authors = list()
 
     for author in coauthors.get(ERDOS):
-        erdos_numbers.setdefault(author, 1)
+        erdos_numbers[author] = 1
         next_authors.append(author)
 
     current_level = 1
@@ -43,9 +43,10 @@ def calculate_erdos_numbers():
         for author in current_authors:
             author_coauthors = coauthors.get(author, [])
             if len(author_coauthors) > 0:
-                for coauthor in [author_coauthor for author_coauthor in author_coauthors if author_coauthor not in erdos_numbers]:
-                    erdos_numbers.setdefault(coauthor, current_level + 1)
-                    next_authors.append(coauthor)
+                for coauthor in author_coauthors:
+                    if author_coauthor not in erdos_numbers:
+                        erdos_numbers[coauthor] = current_level + 1
+                        next_authors.append(coauthor)
         
         current_level += 1
 
