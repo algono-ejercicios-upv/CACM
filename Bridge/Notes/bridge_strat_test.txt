@@ -1,0 +1,31 @@
+------------
+Strategy 1
+------------
+Even
+---
+ABCDEF _
+CDEF AB
+ACDEF B
+ACD BEF
+ABCD EF
+
+CD ABEF
+ACD BEF
+A BCDEF
+AB CDEF
+_ ABCDEF
+---
+Odd
+---
+ABCDE _
+CDE AB
+ACDE B
+AC BDE
+ABC DE
+
+AC BDE
+_ ABCDE
+---
+------------
+Strategy 2
+------------
