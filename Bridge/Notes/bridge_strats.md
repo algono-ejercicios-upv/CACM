@@ -50,6 +50,7 @@ P(len=1|2) = [(A, D)]
 ---
 
 ## Idea
+
 Calculate the minimal time (T) by applying the best strategy for each iteration.
 
 Apply S<sub>1</sub> or S<sub>2</sub> until 0 < len < 4, then the one according to its length and end.
