@@ -1,4 +1,5 @@
 ## Formulas
+
 ---
 
 ### Naming
@@ -18,6 +19,22 @@ D = arr[-1]
 T = Total time for crossing the bridge
 
 P = The sequence of steps for crossing the bridge (in time T)
+
+---
+
+### Strategies
+
+Strategy 1 (S<sub>1</sub>):
+
+- Two fastest cross
+- The fastest between them crosses back
+- Two slowest cross
+- Second fastest crosses back
+    
+Strategy 2 (S<sub>2</sub>):
+
+- Fastest and slowest cross
+- Fastest crosses back
 
 ---
 
