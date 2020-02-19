@@ -1,34 +1,37 @@
-def max_num(pos, arr_len):
-    return min(pos, arr_len - pos)
-
-
 def steps(x, y):
     end = abs(y - x)
     if end < 4:
         return end
     else:
-        arr = [1] * end
-        center_pos = end // 2
-
-        arr_len = len(arr)
-        if arr_len < 4:
-            return arr_len
-
-        if arr_len % 2 == 0:
-            center_two = arr[center_pos:center_pos+2]
-            if center_two[0] == 1 and center_two[1] == 1:
-                arr = arr[0:center_pos] + [2] + arr[center_pos+2:]
-            else:
-                # TODO: Folding for centers > 1
-                pass
+        top = end ** (1/2)
+        top_int = int(top)
+        count = 2*top_int-1
+        if top % 1 == 0:
+            return count
         else:
-            center = arr[center_pos]
-            if center == 1:
-                arr = arr[0:center_pos] + [2] + arr[center_pos+1:-1]
+            total = int(top_int**2)
+            top = top_int
+            left = end - total
+            if left > top:
+                min_times = left // top
+                if min_times < left:
+                    """
+                    TODO: Fix this trying the other cases mentioned.
+
+                    Explanation:
+
+                    When end = 23, the extra (min steps) is (3, 3, 1)
+                    We are only trying combinations of the same number
+                    (i.e.: (1, 1, 1), (2, 2, 2), etc.)
+                    But not cases like this.
+                    """
+                    for times in range(min_times, left):
+                        num = left / times
+                        if num % 1 == 0 and num < top:
+                            return count + times
+                return count + left  # 1s left times
             else:
-                # TODO: Folding for center > 1
-                pass
-        return arr_len
+                return count + 1  # left 1 time
 
 
 test_cases = int(input())
