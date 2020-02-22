@@ -1,7 +1,7 @@
 import datetime
 
-# Recuerda, si encuentras varios enter seguidos del mismo plate,
-# descarta todos salvo el primero
+# Remember, if you find multiple 'enter' in a row from the same plate,
+# discard all of them except the first one
 class Record:
     TYPE_ENTER, TYPE_EXIT = 'enter', 'exit'
 
