@@ -1,6 +1,14 @@
 def is_factovisor(n, m):
     if m < n:
         return True
+    else:
+        f = 1
+        for i in range(2, n+1):
+            f *= i
+            if f > m and f % m == 0:
+                return True
+        else:
+            return False
 
 
 def str_factovisor(n, m, is_factovisor):
