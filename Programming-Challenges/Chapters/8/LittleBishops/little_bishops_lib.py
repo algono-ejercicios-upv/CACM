@@ -102,7 +102,9 @@ def dict_str(res_dict):
 
 
 res_dict = dict()
-res = little_bishops(8, 6)
-res_dict[(8, 6)] = res
+n, k = int(input("n: ")), int(input("k: ")) 
+res = little_bishops(n, k)
+print(res)
 
-print(f'res_str = {dict_str(res_dict)}')
+#res_dict[(n, k)] = res
+#print(f'res_str = {dict_str(res_dict)}')
