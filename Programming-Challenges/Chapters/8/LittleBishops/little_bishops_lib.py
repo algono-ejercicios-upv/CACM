@@ -61,7 +61,7 @@ def get_state_from_board(board, n):
     return sorted([n*r+c for r, row in enumerate(board) for c, spot in enumerate(row) if spot == -1])
 
 
-def little_bishops_from(board, n, k, visited_states=[]):
+def little_bishops_from(board, n, k, visited_states):
     current_state = get_state_from_board(board, n)
     #print(f"{current_state} || {visited_states}")
     if current_state in visited_states:
@@ -90,7 +90,7 @@ def little_bishops_from(board, n, k, visited_states=[]):
 
 def little_bishops(n, k):
     board = [([0] * n) for i in range(n)]
-    return little_bishops_from(board, n, k)
+    return little_bishops_from(board, n, k, list())
 
 
 def list_str(res_dict):
