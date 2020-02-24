@@ -1,0 +1,8 @@
+The thing is that this problem is so large that it ALWAYS will give you TLE (Time Limit Exceeded).
+
+So (it may seem like cheating, but according to the teacher, its not),
+the solution is to precompute the solution for every possible combination on your own
+(and make the program output a string with code for making a dict, so that you only have to copy-paste)
+and just make the actual program get the solution from the dict depending on the combination given by input.
+
+Pre-computing program ---> res_dict = {(1,1) = 1, ...} ---> print(res_dict[n, k]) (after getting n,k from input)
