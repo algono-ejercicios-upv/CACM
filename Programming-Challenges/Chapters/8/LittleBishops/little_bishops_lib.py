@@ -101,7 +101,8 @@ def dict_str(res_dict):
     return '{\n ' + str(str(res_dict)[1:-1].replace(', (', ',\n (')) + '\n}'
 
 
-res_dict = dict()
+#res_dict = dict()
+
 n, k = int(input("n: ")), int(input("k: ")) 
 res = little_bishops(n, k)
 print(res)
