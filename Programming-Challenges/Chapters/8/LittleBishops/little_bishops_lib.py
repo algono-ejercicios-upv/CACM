@@ -70,7 +70,7 @@ def little_bishops_from(board, n, k, visited_states):
         visited_states.append(current_state)
 
         if k == 0:
-            #print(board)
+            # print(board)
             return 1
 
         total = 0
@@ -101,11 +101,11 @@ def dict_str(res_dict):
     return '{\n ' + str(str(res_dict)[1:-1].replace(', (', ',\n (')) + '\n}'
 
 
-#res_dict = dict()
+def main():
+    n, k = int(input("n: ")), int(input("k: "))
+    res = little_bishops(n, k)
+    print(res)
 
-n, k = int(input("n: ")), int(input("k: ")) 
-res = little_bishops(n, k)
-print(res)
 
-#res_dict[(n, k)] = res
-#print(f'res_str = {dict_str(res_dict)}')
+if __name__ == "__main__":
+    main()
