@@ -10,21 +10,13 @@ diff = The number of different letters between start and end
 
 inc = The number of times diff is increased along the path
 
-len = Number of steps between start and end
-
----
-
-## Formulas
-
-len = 2*inc + diff
-
 ---
 
 ## Idea
 
 Instead of plain BFS (too many possible paths), we can use DFS with optimizations.
 
-### Example:
+### Example: (outdated)
 
 booster -> roasted
 

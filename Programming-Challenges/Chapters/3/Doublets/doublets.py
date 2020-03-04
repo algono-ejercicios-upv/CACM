@@ -14,12 +14,7 @@ def str_diff_closure(one: str):
 
 
 def str_inc(ref: str, before: str, after: str):
-    actual_inc = str_diff(after, ref) - str_diff(before, ref)
-    return actual_inc if actual_inc > 0 else 0
-
-
-def route_len(diff: int, inc: int):
-    return 2*inc + diff
+    return str_diff(after, ref) - str_diff(before, ref)
 
 
 def are_doublets(one: str, two: str):
@@ -49,7 +44,7 @@ def check_base(words: list, start: str, end: str, **kwargs):
         if diff:
             max_len = kwargs['max_len']
             if max_len:
-                if diff >= max_len:
+                if diff >= max_len - 1:
                     return None
                 elif diff == max_len - 2:
                     return ([start, end], 0) if are_doublets(start, end) else None
@@ -78,37 +73,26 @@ def doublet_route_dfs_impl(words: list, start: str, end: str, **kwargs):
     visited: set = kwargs['visited']
     doublets = sorted([w for w in words if (visited == None or w not in visited)
                        and are_doublets(w, start)], key=str_diff_closure(end))
-    min_path_word = doublets[0]
-    inc = str_inc(end, start, min_path_word)
-    if inc == 0:
-        visited = set(visited).union(start) if visited else set([start])
-        res = doublet_route_dfs(words, min_path_word, end, visited=visited)
-        if res:
-            next_route, next_inc = res
-            route = [start] + next_route
-            inc += next_inc
-            if inc == 0:
-                return (route, inc)
+    res = min_len = None
+    for min_path_word in doublets:
+        actual_inc = str_inc(end, start, min_path_word)
+        if actual_inc < 0:
+            inc = actual_inc if actual_inc > 0 else 0
+
+            visited = set(visited).union(start) if visited else set([start])
+            next_res = doublet_route_dfs(
+                words, min_path_word, end, max_len=min_len, visited=visited)
+            if next_res:
+                next_route, next_inc = next_res
+                route = [start] + next_route
+                inc += next_inc
+                if inc == 0:
+                    return (route, inc)
+                else:
+                    res = (route, inc)
+                    min_len = len(route)
             else:
-                min_res = (route, inc)
-                min_len = route_len(str_diff(start, end), inc)
-                res = doublet_route_dfs(
-                    words, min_path_word, end, max_len=min_len, visited=visited)
-
-                while res:
-                    next_route, next_inc = res
-                    route = [start] + next_route
-                    inc += next_inc
-                    min_res = (route, inc)
-                    min_len = route_len(str_diff(start, end), inc)
-
-                    visited.update(route)
-                    res = doublet_route_dfs(
-                        words, min_path_word, end, max_len=min_len, visited=visited)
-
-                return min_res
-        else:
-            return res
+                return res
     else:
         return doublet_route_bfs(words, start, end)
 
@@ -132,6 +116,8 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
 
     visited: set = kwargs['visited']
 
+    res = min_len = None
+
     for word in words:
         if are_doublets(start, word):
             if word == end:
@@ -141,7 +127,8 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
 
     visited = set(visited).union(start) if visited else set([start])
 
-    while len(visited) < len(words) and len(next_results) > 0:
+    current_len = 0
+    while len(visited) < len(words) and len(next_results) > 0 and (min_len == None or current_len < min_len - 1):
         results, current_words = next_results, next_words
         next_results, next_words = list(), list()
 
@@ -152,38 +139,62 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
                         route.append(word)
                         return (route, inc)
                     else:
-                        word_route = route.copy()
-                        next_inc = inc + str_inc(end, word_route[-1], word)
-                        word_route.append(word)
+                        actual_word_inc = str_inc(end, route[-1], word)
+                        word_inc = actual_word_inc if actual_word_inc > 0 else 0
+                        acc_inc = inc + word_inc
 
                         visited.add(word)
 
-                        word_doublets = [
-                            w for w in words if w not in visited and are_doublets(w, word)]
+                        if actual_word_inc < 0:
+                            res = doublet_route_dfs(
+                                words, word, end, max_len=min_len, visited=visited)
+                            if res:
+                                res_route, res_inc = res
+                                res_route = route + res_route
+                                res_inc += acc_inc
+                                res = (res_route, res_inc)
+                                min_len = len(res_route)
+                        else:
+                            word_route = route.copy()
+                            word_route.append(word)
 
-                        if len(word_doublets) > 0:
-                            next_results.append((word_route, next_inc))
-                            next_words.append(word_doublets)
+                            word_doublets = [
+                                w for w in words if w not in visited and are_doublets(w, word)]
+
+                            if len(word_doublets) > 0:
+                                next_results.append(
+                                    (word_route, acc_inc))
+                                next_words.append(word_doublets)
+
+        current_len += 1
     else:
-        return None
+        return res
 
 
-try:
-    word = input()
-    words = []
-    while word:
-        words.append(word)
-        word = input()
+def debug():
+    words = ['hola',
+             'bola',
+             'cola',
+             'mola',
+             'mala',
+             'bala',
+             'sala',
+             'sota',
+             'cota',
+             'bota',
+             'rota']
 
-    pair = input()
+    pairs = [('hola', 'rota'),
+             ('sala', 'sota')]
+    
     started = False
-    while pair:
+    for pair in pairs:
         if started:
             print()  # Empty line between cases
         else:
             started = True
 
-        word_one, _, word_two = pair.partition(' ')
+        word_one, word_two = pair
         res = doublet_route_dfs(words, word_one, word_two)
         if res:
             route, inc = res
@@ -191,6 +202,33 @@ try:
         else:
             print('No solution')
 
+
+def main():
+    try:
+        word = input()
+        words = []
+        while word:
+            words.append(word)
+            word = input()
+
         pair = input()
-except EOFError as err:
-    pass
+        started = False
+        while pair:
+            if started:
+                print()  # Empty line between cases
+            else:
+                started = True
+
+            word_one, _, word_two = pair.partition(' ')
+            res = doublet_route_dfs(words, word_one, word_two)
+            if res:
+                route, inc = res
+                print(*route, sep='\n')
+            else:
+                print('No solution')
+
+            pair = input()
+    except EOFError as err:
+        pass
+
+main()
