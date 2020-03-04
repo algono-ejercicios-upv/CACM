@@ -84,6 +84,9 @@ def doublet_route_dfs_impl(words: list, start: str, end: str, **kwargs):
         if doublet_dict:
             doublet_dict[start] = non_sorted_doublets
 
+    if len(non_sorted_doublets) == 0:
+        return None
+
     doublets = sorted(non_sorted_doublets, key=str_diff_closure(end))
 
     res = min_len = None
@@ -92,7 +95,11 @@ def doublet_route_dfs_impl(words: list, start: str, end: str, **kwargs):
         if actual_inc < 0:
             inc = actual_inc if actual_inc > 0 else 0
 
-            visited = set(visited).union(start) if visited else set([start])
+            if visited:
+                visited.add(start)
+            else:
+                visited = set([start])
+            
             next_res = doublet_route_dfs(
                 words, min_path_word, end, max_len=min_len, visited=visited, doublet_dict=doublet_dict)
             if next_res:
@@ -145,7 +152,10 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
         if doublet_dict:
             doublet_dict[start] = next_words[0]
 
-    visited = set(visited).union(start) if visited else set([start])
+    if visited:
+        visited.add(start)
+    else:
+        visited = set([start])
 
     current_len = 0
     while len(visited) < len(words) and len(next_results) > 0 and (min_len == None or current_len < min_len - 1):
