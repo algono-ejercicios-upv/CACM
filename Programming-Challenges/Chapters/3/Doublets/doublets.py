@@ -95,7 +95,7 @@ def doublet_route_dfs_impl(words: set, start: str, end: str, **kwargs):
     kwargs:
     - visited = list of visited words (so that we don't visit them again)
     """
-    visited: set = kwargs['visited']
+    visited = kwargs['visited']
 
     if doublet_dict and start in doublet_dict:
         non_sorted_doublets = doublet_dict[start] if visited == None else [
@@ -152,7 +152,7 @@ def doublet_route_bfs_impl(words: set, start: str, end: str, **kwargs):
     next_results = [([start], 0)]
     next_words = []
 
-    visited: set = kwargs['visited']
+    visited = kwargs['visited']
 
     res = min_len = None
 
