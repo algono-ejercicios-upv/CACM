@@ -28,6 +28,12 @@ def are_doublets(one: str, two: str):
         return False
 
 
+def get_doublets(words: list, word: str, visited=None):
+    # TODO: Change words to hash dict, create all doublet combinations for word
+    return [w for w in words if (visited == None or w not in visited)
+            and are_doublets(w, word)]
+
+
 def check_base(words: list, start: str, end: str, **kwargs):
     """
     kwargs:
@@ -79,8 +85,7 @@ def doublet_route_dfs_impl(words: list, start: str, end: str, **kwargs):
         non_sorted_doublets = doublet_dict[start] if visited == None else [
             w for w in doublet_dict[start] if w not in visited]
     else:
-        non_sorted_doublets = [w for w in words if (visited == None or w not in visited)
-                               and are_doublets(w, start)]
+        non_sorted_doublets = get_doublets(words, start, visited)
         if doublet_dict:
             doublet_dict[start] = non_sorted_doublets
 
@@ -130,7 +135,7 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
     - doublet_dict: dict of doublets from words list
     """
     next_results = [([start], 0)]
-    next_words = [[]]
+    next_words = []
 
     visited: set = kwargs['visited']
     doublet_dict: dict = kwargs['doublet_dict']
@@ -140,12 +145,8 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
     if doublet_dict and start in doublet_dict:
         next_words[0] = doublet_dict[start]
     else:
-        for word in words:
-            if are_doublets(start, word):
-                if word == end:
-                    return [start, end]
-                else:
-                    next_words[0].append(word)
+        start_doublets = get_doublets(words, start, visited)
+        next_words.append(start_doublets)
         if doublet_dict:
             doublet_dict[start] = next_words[0]
 
@@ -185,8 +186,7 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
                             if doublet_dict and word in doublet_dict:
                                 word_doublets = doublet_dict[word]
                             else:
-                                word_doublets = [
-                                    w for w in words if w not in visited and are_doublets(w, word)]
+                                word_doublets = get_doublets(words, word, visited)
 
                             if len(word_doublets) > 0:
                                 next_results.append(
@@ -220,10 +220,11 @@ def debug():
             print()  # Empty line between cases
         else:
             started = True
-            doublet_dict=dict()
+            doublet_dict = dict()
 
         word_one, word_two = pair
-        res = doublet_route_dfs(words, word_one, word_two, doublet_dict=doublet_dict)
+        res = doublet_route_dfs(words, word_one, word_two,
+                                doublet_dict=doublet_dict)
         if res:
             route, inc = res
             print(*route, sep='\n')
@@ -246,10 +247,11 @@ def main():
                 print()  # Empty line between cases
             else:
                 started = True
-                doublet_dict=dict()
+                doublet_dict = dict()
 
             word_one, _, word_two = pair.partition(' ')
-            res = doublet_route_dfs(words, word_one, word_two, doublet_dict=doublet_dict)
+            res = doublet_route_dfs(
+                words, word_one, word_two, doublet_dict=doublet_dict)
             if res:
                 route, inc = res
                 print(*route, sep='\n')
