@@ -28,10 +28,8 @@ def are_doublets(one: str, two: str):
         return False
 
 
-def get_doublets(words: list, word: str, visited=None):
-    # TODO: Change words to hash dict
-
-    doublets = list()
+def get_doublets(words: set, word: str, visited=None):
+    doublets = set()
     for i, ac in enumerate(word):
         for ci in range(ord('a'), ord('z')+1):
             c = chr(ci)
@@ -46,12 +44,12 @@ def get_doublets(words: list, word: str, visited=None):
                     doublet = word[:i] + c + word[i+1:]
 
                 if (visited == None or doublet not in visited) and doublet in words:
-                    doublets.append(doublet)
+                    doublets.add(doublet)
 
     return doublets
 
 
-def check_base(words: list, start: str, end: str, **kwargs):
+def check_base(words: set, start: str, end: str, **kwargs):
     """
     kwargs:
     - max_len: max length of route to be considered valid
@@ -79,7 +77,7 @@ def check_base(words: list, start: str, end: str, **kwargs):
             return None  # Start and end must have the same length
 
 
-def doublet_route_dfs(words: list, start: str, end: str, max_len=None, visited=None, doublet_dict=None):
+def doublet_route_dfs(words: set, start: str, end: str, max_len=None, visited=None, doublet_dict=None):
     """
     Uses DFS to find the perfect minimal route.
     If no perfect route is found, it switches to BFS to find the minimal.
@@ -89,7 +87,7 @@ def doublet_route_dfs(words: list, start: str, end: str, max_len=None, visited=N
     return check_base(words, start, end, max_len=max_len, func=doublet_route_dfs_impl, visited=visited, doublet_dict=doublet_dict)
 
 
-def doublet_route_dfs_impl(words: list, start: str, end: str, **kwargs):
+def doublet_route_dfs_impl(words: set, start: str, end: str, **kwargs):
     """
     kwargs:
     - visited = list of visited words (so that we don't visit them again)
@@ -134,7 +132,7 @@ def doublet_route_dfs_impl(words: list, start: str, end: str, **kwargs):
         return doublet_route_bfs(words, start, end, visited=visited.copy() if visited else None, doublet_dict=doublet_dict)
 
 
-def doublet_route_bfs(words: list, start: str, end: str, max_len=None, visited=None, doublet_dict=None):
+def doublet_route_bfs(words: set, start: str, end: str, max_len=None, visited=None, doublet_dict=None):
     """
     Uses BFS to find the minimal route.
 
@@ -143,7 +141,7 @@ def doublet_route_bfs(words: list, start: str, end: str, max_len=None, visited=N
     return check_base(words, start, end, max_len=max_len, func=doublet_route_bfs_impl, visited=visited, doublet_dict=doublet_dict)
 
 
-def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
+def doublet_route_bfs_impl(words: set, start: str, end: str, **kwargs):
     """
     kwargs:
     - visited = list of visited words (so that we don't visit them again)
@@ -216,7 +214,7 @@ def doublet_route_bfs_impl(words: list, start: str, end: str, **kwargs):
 
 
 def debug():
-    words = ['hola',
+    words = set(['hola',
              'bola',
              'cola',
              'mola',
@@ -226,7 +224,7 @@ def debug():
              'sota',
              'cota',
              'bota',
-             'rota']
+             'rota'])
 
     pairs = [('hola', 'rota'),
              ('sala', 'sota')]
@@ -252,9 +250,9 @@ def debug():
 def main():
     try:
         word = input()
-        words = []
+        words = set()
         while word:
-            words.append(word)
+            words.add(word)
             word = input()
 
         pair = input()
