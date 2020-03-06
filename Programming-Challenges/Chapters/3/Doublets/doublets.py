@@ -71,30 +71,31 @@ def check_base(words: set, start: str, end: str, **kwargs):
                 elif diff == max_len - 2:
                     return ([start, end], 0) if are_doublets(start, end) else None
 
-            func, visited, doublet_dict = kwargs['func'], kwargs['visited'], kwargs['doublet_dict']
-            return func(words, start, end, visited=visited, doublet_dict=doublet_dict) if func else None
+            if (start, end) in solved_dict:
+                return solved_dict[(start, end)]
+
+            func, visited = kwargs['func'], kwargs['visited']
+            return func(words, start, end, visited=visited) if func else None
         else:
             return None  # Start and end must have the same length
 
 
-def doublet_route_dfs(words: set, start: str, end: str, max_len=None, visited=None, doublet_dict=None):
+def doublet_route_dfs(words: set, start: str, end: str, max_len=None, visited=None):
     """
     Uses DFS to find the perfect minimal route.
     If no perfect route is found, it switches to BFS to find the minimal.
 
     Returns: Tuple (route, inc) minimal
     """
-    return check_base(words, start, end, max_len=max_len, func=doublet_route_dfs_impl, visited=visited, doublet_dict=doublet_dict)
+    return check_base(words, start, end, max_len=max_len, func=doublet_route_dfs_impl, visited=visited)
 
 
 def doublet_route_dfs_impl(words: set, start: str, end: str, **kwargs):
     """
     kwargs:
     - visited = list of visited words (so that we don't visit them again)
-    - doublet_dict: dict of doublets from words list
     """
     visited: set = kwargs['visited']
-    doublet_dict: dict = kwargs['doublet_dict']
 
     if doublet_dict and start in doublet_dict:
         non_sorted_doublets = doublet_dict[start] if visited == None else [
@@ -114,46 +115,46 @@ def doublet_route_dfs_impl(words: set, start: str, end: str, **kwargs):
         actual_inc = str_inc(end, start, min_path_word)
         if actual_inc < 0:
             inc = actual_inc if actual_inc > 0 else 0
-            
+
             next_res = doublet_route_dfs(
-                words, min_path_word, end, max_len=min_len, visited=visited.union([start]) if visited else None, doublet_dict=doublet_dict)
+                words, min_path_word, end, max_len=min_len, visited=visited.union([start]) if visited else None)
             if next_res:
                 next_route, next_inc = next_res
                 route = [start] + next_route
                 inc += next_inc
+                res = (route, inc)
                 if inc == 0:
-                    return (route, inc)
+                    solved_dict[(start, end)] = res
+                    return res
                 else:
-                    res = (route, inc)
                     min_len = len(route)
             else:
+                solved_dict[(start, end)] = res
                 return res
     else:
-        return doublet_route_bfs(words, start, end, visited=visited.copy() if visited else None, doublet_dict=doublet_dict)
+        return doublet_route_bfs(words, start, end, visited=visited.copy() if visited else None)
 
 
-def doublet_route_bfs(words: set, start: str, end: str, max_len=None, visited=None, doublet_dict=None):
+def doublet_route_bfs(words: set, start: str, end: str, max_len=None, visited=None):
     """
     Uses BFS to find the minimal route.
 
     Returns: Minimal doublet route between start and end
     """
-    return check_base(words, start, end, max_len=max_len, func=doublet_route_bfs_impl, visited=visited, doublet_dict=doublet_dict)
+    return check_base(words, start, end, max_len=max_len, func=doublet_route_bfs_impl, visited=visited)
 
 
 def doublet_route_bfs_impl(words: set, start: str, end: str, **kwargs):
     """
     kwargs:
     - visited = list of visited words (so that we don't visit them again)
-    - doublet_dict: dict of doublets from words list
     """
     next_results = [([start], 0)]
     next_words = []
 
     visited: set = kwargs['visited']
-    doublet_dict: dict = kwargs['doublet_dict']
 
-    min_res = min_len = None
+    res = min_len = None
 
     if doublet_dict and start in doublet_dict:
         next_words.append(doublet_dict[start])
@@ -178,7 +179,9 @@ def doublet_route_bfs_impl(words: set, start: str, end: str, **kwargs):
                 if word not in visited:
                     if word == end:
                         route.append(word)
-                        return (route, inc)
+                        res = (route, inc)
+                        solved_dict[(start, end)] = res
+                        return res
                     else:
                         actual_word_inc = str_inc(end, route[-1], word)
                         word_inc = actual_word_inc if actual_word_inc > 0 else 0
@@ -188,12 +191,12 @@ def doublet_route_bfs_impl(words: set, start: str, end: str, **kwargs):
 
                         if actual_word_inc < 0:
                             current_res = doublet_route_dfs(
-                                words, word, end, max_len=min_len, visited=set(route), doublet_dict=doublet_dict)
+                                words, word, end, max_len=min_len, visited=set(route))
                             if current_res:
                                 res_route, res_inc = current_res
                                 res_inc += acc_inc
                                 min_len = len(res_route)
-                                min_res = (route + res_route, res_inc)                               
+                                res = (route + res_route, res_inc)
                         else:
                             word_route = route.copy()
                             word_route.append(word)
@@ -201,7 +204,8 @@ def doublet_route_bfs_impl(words: set, start: str, end: str, **kwargs):
                             if doublet_dict and word in doublet_dict:
                                 word_doublets = doublet_dict[word]
                             else:
-                                word_doublets = get_doublets(words, word, visited)
+                                word_doublets = get_doublets(
+                                    words, word, visited)
 
                             if len(word_doublets) > 0:
                                 next_results.append(
@@ -210,41 +214,16 @@ def doublet_route_bfs_impl(words: set, start: str, end: str, **kwargs):
 
         current_len += 1
     else:
-        return min_res
+        solved_dict[(start, end)] = res
+        return res
 
 
-def debug():
-    words = set(['hola',
-             'bola',
-             'cola',
-             'mola',
-             'mala',
-             'bala',
-             'sala',
-             'sota',
-             'cota',
-             'bota',
-             'rota'])
-
-    pairs = [('hola', 'rota'),
-             ('sala', 'sota')]
-
-    started = False
-    for pair in pairs:
-        if started:
-            print()  # Empty line between cases
-        else:
-            started = True
-            doublet_dict = dict()
-
-        word_one, word_two = pair
-        res = doublet_route_dfs(words, word_one, word_two,
-                                doublet_dict=doublet_dict)
-        if res:
-            route, inc = res
-            print(*route, sep='\n')
-        else:
-            print('No solution')
+"""
+Global variables:
+- doublet_dict: dict of doublets from words list
+- solved_dict: dict of already computed solutions
+"""
+doublet_dict = solved_dict = None
 
 
 def main():
@@ -262,11 +241,11 @@ def main():
                 print()  # Empty line between cases
             else:
                 started = True
-                doublet_dict = dict()
+                global doublet_dict, solved_dict
+                doublet_dict, solved_dict = dict(), dict()
 
             word_one, _, word_two = pair.partition(' ')
-            res = doublet_route_dfs(
-                words, word_one, word_two, doublet_dict=doublet_dict)
+            res = doublet_route_dfs(words, word_one, word_two)
             if res:
                 route, inc = res
                 print(*route, sep='\n')
@@ -278,4 +257,81 @@ def main():
         pass
 
 
-debug()
+main()
+
+################################################################
+# DEBUG AND TEST METHODS
+################################################################
+import random
+
+
+def test_all(print_res=False):
+    words = set()
+    pairs = set()
+    max_len = int(input('number between 1 and 25143: '))
+    while len(words) < max_len:
+        word = ''
+        for i in range(16):
+            random_letter = chr(random.randint(ord('a'), ord('z')))
+            word += random_letter
+        words.add(word)
+        for w in words:
+            pairs.add((w, word))
+            pairs.add((word, w))
+
+    started = False
+    for pair in pairs:
+        if started:
+            if print_res:
+                print()  # Empty line between cases
+        else:
+            started = True
+            global doublet_dict, solved_dict
+            doublet_dict, solved_dict = dict(), dict()
+
+        word_one, word_two = pair
+        res = doublet_route_dfs(words, word_one, word_two)
+        if res:
+            route, inc = res
+            if print_res:
+                print(*route, sep='\n')
+        else:
+            if print_res:
+                print('No solution')
+
+
+def debug():
+    words = set(['hola',
+                 'bola',
+                 'cola',
+                 'mola',
+                 'mala',
+                 'bala',
+                 'sala',
+                 'sota',
+                 'cota',
+                 'bota',
+                 'rota'])
+
+    pairs = [('hola', 'rota'),
+             ('sala', 'sota')]
+
+    started = False
+    for pair in pairs:
+        if started:
+            print()  # Empty line between cases
+        else:
+            started = True
+            global doublet_dict, solved_dict
+            doublet_dict, solved_dict = dict(), dict()
+
+        word_one, word_two = pair
+        res = doublet_route_dfs(words, word_one, word_two)
+        if res:
+            route, inc = res
+            print(*route, sep='\n')
+        else:
+            print('No solution')
+
+
+# test_all()
