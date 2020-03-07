@@ -1,29 +1,35 @@
-def bin_format(n, leading_zeros=0):
-    return n[2:].zfill(leading_zeros)
+def is_reachable(automaton_state, number_of_cells, evolution_rules):
+    return is_reachable_impl(automaton_state, number_of_cells, evolution_rules, 0, None, None)
 
 
-def full_cell_state_match(one, two):
-    return one[-2:] == two[:2]
-
-
-def is_reachable(automaton_state, evolution_rules):
-    return is_reachable_impl(automaton_state, evolution_rules, 0, None, None)
-
-
-def is_reachable_impl(automaton_state, evolution_rules, cell_pos, first_full_cell_state, last_full_cell_state):
-    if cell_pos == len(automaton_state):
-        return first_full_cell_state == last_full_cell_state
+def is_reachable_impl(automaton_state, number_of_cells, evolution_rules, cell_pos, first_full_cell_state, last_full_cell_state):
+    if cell_pos == number_of_cells-1:
+        return first_full_cell_state[-2:] == last_full_cell_state[:2]
     else:
         cell_state = automaton_state[cell_pos]
 
         for full_cell_state in evolution_rules[cell_state]:
-            if last_full_cell_state == None or full_cell_state_match(last_full_cell_state, full_cell_state):
-                res = is_reachable_impl(automaton_state, evolution_rules, cell_pos+1,
+            # It is only valid if the first two digits of it match the last one's last two
+            if last_full_cell_state == None or last_full_cell_state[-2:] == full_cell_state[:2]:
+                res = is_reachable_impl(automaton_state, number_of_cells, evolution_rules, cell_pos+1,
                                         full_cell_state if first_full_cell_state == None else first_full_cell_state, full_cell_state)
                 if res:
                     return res
         else:
             return False
+
+
+# Every possible rule input (L-C-R) (0-0-0 -> 1-1-1)
+rule_inputs = [
+    '000',
+    '001',
+    '010',
+    '011',
+    '100',
+    '101',
+    '110',
+    '111'
+]
 
 
 try:
@@ -34,19 +40,19 @@ try:
         automaton_id, number_of_cells, automaton_state = int(automaton_params[0]), int(
             automaton_params[1]), automaton_params[2]
 
-        automaton_rule_states = bin_format(bin(automaton_id), 8)
-
         evolution_rules = {'0': [], '1': []}  # All possible states for a cell
 
-        # For every rule (L-C-R) (0-0-0 -> 1-1-1) as an int (0 -> 7), and the state it generates ('new_state')
-        for rule_int, new_state in zip(range(8), reversed(automaton_rule_states)):
-            # Get a string representation of it
-            rule = bin_format(bin(rule_int), 3)
-
+        automaton_id_left = automaton_id
+        # For every possible rule input
+        for rule in rule_inputs:
+            # Calculate the state it generates (from the automaton id)
+            out_state = str(automaton_id_left % 2)
+            # Take out the state from the id
+            automaton_id_left //= 2
             # Store into a list of which rules generate that state
-            evolution_rules[new_state].append(rule)
+            evolution_rules[out_state].append(rule)
 
-        print('REACHABLE' if is_reachable(automaton_state,
+        print('REACHABLE' if is_reachable(automaton_state, number_of_cells,
                                           evolution_rules) else 'GARDEN OF EDEN')
 
         automaton_str = input()
