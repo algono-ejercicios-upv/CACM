@@ -3,8 +3,8 @@ def is_reachable(automaton_state, number_of_cells, evolution_rules):
 
 
 def is_reachable_impl(automaton_state, number_of_cells, evolution_rules, cell_pos, first_full_cell_state, last_full_cell_state):
-    if cell_pos == number_of_cells-1:
-        return first_full_cell_state[-2:] == last_full_cell_state[:2]
+    if cell_pos == number_of_cells:
+        return first_full_cell_state[:2] == last_full_cell_state[-2:]
     else:
         cell_state = automaton_state[cell_pos]
 
