@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "xstring": "cpp"
+        "*.mcmeta": "json",
+        "xstring": "cpp",
+        "xiosbase": "cpp"
     }
 }

@@ -150,3 +150,7 @@ venv.bak/
 
 # result text files for debugging
 result.txt
+
+# Other debugging C++ files
+*.ilk
+*.pdb

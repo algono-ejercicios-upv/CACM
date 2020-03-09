@@ -1,0 +1,42 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "cl.exe build active file",
+            "command": "cl.exe",
+            "args": [
+                "/Zi",
+                "/EHsc",
+                "/Fe:",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "${file}"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "remove cl.exe build files",
+            "command": "rm", // rm for powershell (you must have powershell as default shell in vscode!)
+            
+            "args": [
+                "\"${fileDirname}\\*\"",
+                "-Include",
+                "\"${fileBasenameNoExtension}.exe\",\"${fileBasenameNoExtension}.ilk\",\"${fileBasenameNoExtension}.pdb\"",
+                ";",
+                "rm",
+                "\"${workspaceFolder}\\*\"",
+                "-Include",
+                "\"${fileBasenameNoExtension}.obj\",vc140.pdb"
+            ]
+        }
+    ]
+}
