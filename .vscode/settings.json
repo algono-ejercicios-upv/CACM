@@ -2,6 +2,7 @@
     "files.associations": {
         "*.mcmeta": "json",
         "xstring": "cpp",
-        "xiosbase": "cpp"
+        "xiosbase": "cpp",
+        "iostream": "cpp"
     }
 }
