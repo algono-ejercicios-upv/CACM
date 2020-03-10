@@ -34,7 +34,7 @@ bool is_reachable(int cell_pos, int curr_state) {
 }
 
 int main() {
-    // Code for optimization (Unties C and C++ standard streams, as it is not needed)
+    // Code for optimization (Unties C and C++ standard streams, which allows you to still use cin/cout, but not scanf/printf)
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 

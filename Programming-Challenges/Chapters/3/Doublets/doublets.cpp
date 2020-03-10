@@ -264,8 +264,12 @@ pair<list<int>, int> doublet_route(int startIndex, int endIndex, bool bfs = fals
 
 int main()
 {
+    // Code for optimization (Unties C and C++ standard streams, which allows you to still use cin/cout, but not scanf/printf)
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    
     string word;
-    for (int i = 0; i < MAX_WORDS && (cin >> word); i++)
+    for (int i = 0; i < MAX_WORDS && getline(cin, word); i++)
     {
         if (word.empty())
         {
