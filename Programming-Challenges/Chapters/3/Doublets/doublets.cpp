@@ -1,6 +1,6 @@
 #include <string>
 #include <vector>
-#include <list>
+#include <stack>
 #include <algorithm>
 #include <map>
 #include <iostream>
@@ -12,10 +12,10 @@ using namespace std;
 #define MAX_WORD_LEN 16
 
 #define NULL_RES \
-    pair<list<int>, int> { list<int>{}, 0 }
+    pair<stack<int>, int> { stack<int>(), 0 }
 
 vector<string> words;
-pair<list<int>, int> res;
+pair<stack<int>, int> res;
 bool visited[MAX_WORDS];
 
 map<int, vector<int>> doublets_dict;
@@ -100,14 +100,15 @@ vector<int> get_doublets(int wordIndex)
 }
 
 // This is called forward declaration, and it is used so that doublet_route can call dfs and bfs, and they can call doublet_route as well
-pair<list<int>, int> doublet_route(int startIndex, int endIndex, bool bfs, int max_len);
+bool doublet_route(int startIndex, int endIndex, int max_len);
 
-pair<list<int>, int> doublet_route_dfs(int startIndex, int endIndex)
+bool doublet_route_dfs(int startIndex, int endIndex)
 {
     vector<int> doublets = get_doublets(startIndex);
     if (doublets.empty())
     {
-        return NULL_RES;
+        visited[startIndex] = true;
+        return false;
     }
 
     string start = words[startIndex];
@@ -115,126 +116,48 @@ pair<list<int>, int> doublet_route_dfs(int startIndex, int endIndex)
 
     int min_len = 0;
     string end = words[endIndex];
-
+    bool anyFound;
+    pair<stack<int>, int> initRes = {stack<int>(res.first), res.second}, bestRes;
     for (int i = 0; i < doublets.size(); i++)
     {
         if (!visited[i])
         {
             int doubletIndex = doublets[i];
+
             int actual_inc = str_inc(end, start, words[doubletIndex]);
-            if (actual_inc < 0)
-            {
-                int inc = actual_inc > 0 ? actual_inc : 0;
+            int inc = actual_inc > 0 ? actual_inc : 0;
 
-                pair<list<int>, int> next_res = doublet_route(doubletIndex, endIndex, false, min_len);
-                if (!next_res.first.empty())
+            res = {stack<int>(initRes.first), initRes.second + inc};
+            res.first.push(startIndex);
+
+            bool found = doublet_route(doubletIndex, endIndex, min_len);
+            if (found)
+            {
+                anyFound = true;
+                bestRes = res;
+                if (res.second == 0)
                 {
-                    // TODO: Keep best res
-                    next_res.first.push_front(startIndex);
-                    next_res.second += inc;
-                    if (next_res.second == 0)
-                    {
-                        return next_res;
-                    }
-                    else
-                    {
-                        // We dont need to check if next_res.first len is lower than the previous one,
-                        // as it is already checked so that in case it was, next_res.first would be empty
-                        min_len = next_res.first.size();
-                    }
+                    visited[startIndex] = true;
+                    return true;
                 }
+                // We dont need to check if next_res.first len is lower than the previous one,
+                // as it is already checked so that in case it was, next_res.first would be empty
+                min_len = res.first.size();
             }
         }
     }
 
-    if (res.first.empty())
-    {
-        res = doublet_route(startIndex, endIndex, true, 0);
-    }
-
     visited[startIndex] = true;
-    return res;
+    res = anyFound ? bestRes : initRes;
+    return anyFound;
 }
 
-pair<list<int>, int> doublet_route_bfs(int startIndex, int endIndex)
-{
-    vector<pair<list<int>, int>> next_results = {{{startIndex}, 0}};
-    vector<vector<int>> next_words = {get_doublets(startIndex)};
-
-    int min_len = 0;
-
-    visited[startIndex] = true;
-
-    int current_len = 0;
-    vector<pair<list<int>, int>> results;
-    vector<vector<int>> current_words;
-    while (current_len < min_len - 1 && next_results.size() > 0)
-    {
-        results = next_results, current_words = next_words;
-        next_results = {}, next_words = {};
-
-        for (int index = 0; index < results.size(); index++)
-        {
-            pair<list<int>, int> current_res = results[index];
-            for (int wordIndex : current_words[index])
-            {
-                if (visited[wordIndex])
-                {
-                    continue; // Jump to next word
-                }
-
-                list<int> route = current_res.first;
-
-                if (wordIndex == endIndex)
-                {
-                    route.push_back(wordIndex);
-                    res = current_res;
-                    return res;
-                }
-
-                int actual_word_inc = str_inc(words[endIndex], words[route.back()], words[wordIndex]);
-                int word_inc = actual_word_inc > 0 ? actual_word_inc : 0;
-                int acc_inc = current_res.second + word_inc;
-
-                visited[wordIndex] = true;
-
-                if (actual_word_inc < 0)
-                {
-                    current_res = doublet_route(wordIndex, endIndex, false, min_len);
-                    if (!current_res.first.empty())
-                    {
-                        current_res.second += acc_inc;
-                        min_len = current_res.first.size();
-                        current_res.first.insert(current_res.first.begin(), route.begin(), route.end());
-                        res = current_res;
-                    }
-                }
-                else
-                {
-                    list<int> word_route = list<int>(route);
-                    word_route.push_back(wordIndex);
-
-                    vector<int> word_doublets = doublets_calculated[wordIndex] ? doublets_dict[wordIndex] : get_doublets(wordIndex);
-
-                    if (!word_doublets.empty())
-                    {
-                        next_results.push_back({word_route, acc_inc});
-                        next_words.push_back(word_doublets);
-                    }
-                }
-            }
-        }
-        current_len++;
-    }
-
-    return res;
-}
-
-pair<list<int>, int> doublet_route(int startIndex, int endIndex, bool bfs = false, int max_len = 0)
+bool doublet_route(int startIndex, int endIndex, int max_len = 0)
 {
     if (startIndex == endIndex)
     {
-        return {{startIndex}, 0};
+        res.first.push(startIndex);
+        return true;
     }
     else
     {
@@ -246,19 +169,102 @@ pair<list<int>, int> doublet_route(int startIndex, int endIndex, bool bfs = fals
             {
                 if (diff >= max_len - 1)
                 {
-                    return NULL_RES;
+                    return false;
                 }
                 else if (diff == max_len - 2)
                 {
-                    return (are_doublets(start, end) ? pair<list<int>, int>{list<int>{startIndex, endIndex}, 0} : NULL_RES);
+                    if (are_doublets(start, end))
+                    {
+                        res.first.push(startIndex);
+                        res.first.push(endIndex);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
-            return bfs ? doublet_route_bfs(startIndex, endIndex) : doublet_route_dfs(startIndex, endIndex);
+            return doublet_route_dfs(startIndex, endIndex);
         }
         else
         {
-            return NULL_RES;
+            return false;
         }
+    }
+}
+
+void print_res(bool found)
+{
+    if (found && !res.first.empty())
+    {
+        int res_size = res.first.size();
+        int i = res_size - 1;
+        int resRoute[res_size];
+        while (!res.first.empty())
+        {
+            resRoute[i] = res.first.top();
+            res.first.pop();
+            i--;
+        }
+
+        for (int wordIndex : resRoute)
+        {
+            cout << words[wordIndex] << endl;
+        }
+    }
+    else
+    {
+        cout << "No solution" << endl;
+    }
+    cout << endl;
+}
+
+void debug()
+{
+    words = {
+        "booster",
+        "rooster",
+        "roaster",
+        "coasted",
+        "roasted",
+        "coastal",
+        "postal"};
+
+    // words = {
+    //     "hola",
+    //     "bola",
+    //     "cola",
+    //     "mola",
+    //     "mala",
+    //     "bala",
+    //     "sala",
+    //     "sota",
+    //     "cota",
+    //     "bota",
+    //     "rota"};
+
+    words_size = words.size();
+
+    vector<pair<string, string>> pairs = {
+        {"booster", "roasted"},
+        {"coastal", "postal"}};
+
+    // vector<pair<string, string>> pairs = {
+    //     {"hola", "rota"},
+    //     {"sala", "sota"}};
+
+    res = NULL_RES;
+    for (pair<string, string> word_pair : pairs)
+    {
+        string start = word_pair.first, end = word_pair.second;
+        int startIndex = find(words.begin(), words.end(), start) - words.begin();
+        int endIndex = find(words.begin(), words.end(), end) - words.begin();
+
+        // Reset the visited array
+        memset(visited, false, words_size);
+        bool found = doublet_route(startIndex, endIndex);
+        print_res(found);
     }
 }
 
@@ -267,7 +273,11 @@ int main()
     // Code for optimization (Unties C and C++ standard streams, which allows you to still use cin/cout, but not scanf/printf)
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
-    
+
+    // CODE FOR DEBUGGING. TODO: DELETE FOR PRODUCTION
+    // debug();
+    // return 0;
+
     string word;
     for (int i = 0; i < MAX_WORDS && getline(cin, word); i++)
     {
@@ -279,6 +289,7 @@ int main()
     }
     words_size = words.size();
 
+    res = NULL_RES;
     string start, end;
     while (cin >> start >> end)
     {
@@ -287,18 +298,7 @@ int main()
 
         // Reset the visited array
         memset(visited, false, words_size);
-        pair<list<int>, int> res = doublet_route(startIndex, endIndex);
-        if (res.first.empty())
-        {
-            cout << "No solution" << endl;
-        }
-        else
-        {
-            for (int wordIndex : res.first)
-            {
-                cout << words[wordIndex] << endl;
-            }
-            cout << endl;
-        }
+        bool found = doublet_route(startIndex, endIndex);
+        print_res(found);
     }
 }
