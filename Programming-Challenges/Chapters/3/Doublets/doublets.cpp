@@ -2,10 +2,10 @@
 #include <vector>
 #include <stack>
 #include <deque>
-#include <algorithm>
+#include <algorithm> // sort, mismatch
 #include <map>
-#include <iostream>
-#include <cstring>
+#include <iostream> // cin/cout
+#include <utility> // pair
 
 using namespace std;
 
@@ -26,13 +26,13 @@ int words_size = MAX_WORDS;
 
 int str_diff(string one, string two)
 {
-    if (one.length() == two.length())
+    int one_len = one.length();
+    if (one_len == two.length())
     {
         int diff = 0;
-        for (int i = 0; i < one.length(); i++)
+        for (int i = 0; i < one_len; i++)
         {
-            char l_one = one[i], l_two = two[i];
-            if (l_one != l_two)
+            if (one[i] != two[i])
             {
                 diff++;
             }
@@ -267,8 +267,6 @@ int main()
         int startIndex = find(words.begin(), words.end(), start) - words.begin();
         int endIndex = find(words.begin(), words.end(), end) - words.begin();
 
-        // Reset the visited array
-        memset(visited, false, words_size);
         bool found = doublet_route(startIndex, endIndex);
         print_res(found);
     }
