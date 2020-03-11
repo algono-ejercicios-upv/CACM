@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <deque>
 #include <algorithm>
 #include <map>
 #include <iostream>
@@ -12,10 +13,10 @@ using namespace std;
 #define MAX_WORD_LEN 16
 
 #define NULL_RES \
-    pair<stack<int>, int> { stack<int>(), 0 }
+    pair<deque<int>, int> { deque<int>(), 0 }
 
 vector<string> words;
-pair<stack<int>, int> res;
+pair<deque<int>, int> res;
 bool visited[MAX_WORDS];
 
 map<int, vector<int>> doublets_dict;
@@ -129,7 +130,7 @@ bool doublet_route_dfs(int startIndex, int endIndex, int diff)
         {
             int actual_inc = str_inc(end, start, words[doubletIndex]);
 
-            res.first.push(startIndex);
+            res.first.push_back(startIndex);
             res.second += actual_inc;
 
             visited[startIndex] = true;
@@ -156,9 +157,9 @@ bool doublet_route_dfs(int startIndex, int endIndex, int diff)
                 bestRes = stack<int>{};
                 for (int j = 0; j < nextSize; j++)
                 {
-                    bestRes.push(res.first.top());
+                    bestRes.push(res.first.back());
 
-                    res.first.pop();
+                    res.first.pop_back();
                 }
                 bestInc = res.second - initInc;
                 res.second = initInc;
@@ -168,7 +169,7 @@ bool doublet_route_dfs(int startIndex, int endIndex, int diff)
                 // Undoing next steps without keeping them (as they are not a solution)
                 for (int j = 0; j < nextSize; j++)
                 {
-                    res.first.pop();
+                    res.first.pop_back();
                 }
             }
         }
@@ -178,7 +179,7 @@ bool doublet_route_dfs(int startIndex, int endIndex, int diff)
     {
         while (!bestRes.empty())
         {
-            res.first.push(bestRes.top());
+            res.first.push_back(bestRes.top());
             bestRes.pop();
         }
         res.second += bestInc;
@@ -191,7 +192,7 @@ bool doublet_route(int startIndex, int endIndex, int max_len = 0)
 {
     if (startIndex == endIndex)
     {
-        res.first.push(startIndex);
+        res.first.push_back(startIndex);
         return true;
     }
     else
@@ -210,8 +211,8 @@ bool doublet_route(int startIndex, int endIndex, int max_len = 0)
 
             if (diff == 1) // diff == 1 is equivalent to are_doublets(start, end)
             {
-                res.first.push(startIndex);
-                res.first.push(endIndex);
+                res.first.push_back(startIndex);
+                res.first.push_back(endIndex);
                 return true;
             }
 
@@ -228,18 +229,10 @@ void print_res(bool found)
 {
     if (found && !res.first.empty())
     {
-        // This is used to reverse the print order
-        stack<int> resRoute = {};
         while (!res.first.empty())
         {
-            resRoute.push(res.first.top());
-            res.first.pop();
-        }
-
-        while (!resRoute.empty())
-        {
-            cout << words[resRoute.top()] << endl;
-            resRoute.pop();
+            cout << words[res.first.front()] << endl;
+            res.first.pop_front();
         }
     }
     else
