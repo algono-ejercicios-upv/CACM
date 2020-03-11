@@ -94,7 +94,10 @@ vector<int> get_doublets(int wordIndex)
                 doublets.push_back(i);
             }
         }
+
+        doublets_dict[wordIndex] = doublets;
         doublets_calculated[wordIndex] = true;
+        
         return doublets;
     }
 }
@@ -102,12 +105,11 @@ vector<int> get_doublets(int wordIndex)
 // This is called forward declaration, and it is used so that doublet_route can call dfs and bfs, and they can call doublet_route as well
 bool doublet_route(int startIndex, int endIndex, int max_len);
 
-bool doublet_route_dfs(int startIndex, int endIndex)
+bool doublet_route_dfs(int startIndex, int endIndex, int diff)
 {
     vector<int> doublets = get_doublets(startIndex);
     if (doublets.empty())
     {
-        visited[startIndex] = true;
         return false;
     }
 
@@ -116,39 +118,72 @@ bool doublet_route_dfs(int startIndex, int endIndex)
 
     int min_len = 0;
     string end = words[endIndex];
+    int initResSize = res.first.size(), initInc = res.second;
+    stack<int> bestRes;
+    int bestInc;
     bool anyFound;
-    pair<stack<int>, int> initRes = {stack<int>(res.first), res.second}, bestRes;
     for (int i = 0; i < doublets.size(); i++)
     {
-        if (!visited[i])
+        int doubletIndex = doublets[i];
+        if (!visited[doubletIndex])
         {
-            int doubletIndex = doublets[i];
-
             int actual_inc = str_inc(end, start, words[doubletIndex]);
-            int inc = actual_inc > 0 ? actual_inc : 0;
 
-            res = {stack<int>(initRes.first), initRes.second + inc};
             res.first.push(startIndex);
+            res.second += actual_inc;
+
+            visited[startIndex] = true;
 
             bool found = doublet_route(doubletIndex, endIndex, min_len);
+
+            // visited should only be considered for the current path (because other paths containing this index could be shorter)
+            visited[startIndex] = false;
+
+            int nextSize = res.first.size() - initResSize;
             if (found)
             {
                 anyFound = true;
-                bestRes = res;
-                if (res.second == 0)
+
+                if (res.second == -(diff))
                 {
-                    visited[startIndex] = true;
                     return true;
                 }
                 // We dont need to check if next_res.first len is lower than the previous one,
                 // as it is already checked so that in case it was, next_res.first would be empty
                 min_len = res.first.size();
+
+                // Undoing next steps, and keeping them as the best ones yet (if they are)
+                bestRes = stack<int>{};
+                for (int j = 0; j < nextSize; j++)
+                {
+                    bestRes.push(res.first.top());
+
+                    res.first.pop();
+                }
+                bestInc = res.second - initInc;
+                res.second = initInc;
+            }
+            else
+            {
+                // Undoing next steps without keeping them (as they are not a solution)
+                for (int j = 0; j < nextSize; j++)
+                {
+                    res.first.pop();
+                }
             }
         }
     }
 
-    visited[startIndex] = true;
-    res = anyFound ? bestRes : initRes;
+    if (anyFound)
+    {
+        while (!bestRes.empty())
+        {
+            res.first.push(bestRes.top());
+            bestRes.pop();
+        }
+        res.second += bestInc;
+    }
+
     return anyFound;
 }
 
@@ -167,25 +202,20 @@ bool doublet_route(int startIndex, int endIndex, int max_len = 0)
         {
             if (max_len > 0)
             {
-                if (diff >= max_len - 1)
+                if (diff >= max_len - 1 || (diff == max_len - 2 && diff > 1))
                 {
                     return false;
                 }
-                else if (diff == max_len - 2)
-                {
-                    if (are_doublets(start, end))
-                    {
-                        res.first.push(startIndex);
-                        res.first.push(endIndex);
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
             }
-            return doublet_route_dfs(startIndex, endIndex);
+
+            if (diff == 1) // diff == 1 is equivalent to are_doublets(start, end)
+            {
+                res.first.push(startIndex);
+                res.first.push(endIndex);
+                return true;
+            }
+
+            return doublet_route_dfs(startIndex, endIndex, diff);
         }
         else
         {
@@ -198,19 +228,18 @@ void print_res(bool found)
 {
     if (found && !res.first.empty())
     {
-        int res_size = res.first.size();
-        int i = res_size - 1;
-        int resRoute[res_size];
+        // This is used to reverse the print order
+        stack<int> resRoute = {};
         while (!res.first.empty())
         {
-            resRoute[i] = res.first.top();
+            resRoute.push(res.first.top());
             res.first.pop();
-            i--;
         }
 
-        for (int wordIndex : resRoute)
+        while (!resRoute.empty())
         {
-            cout << words[wordIndex] << endl;
+            cout << words[resRoute.top()] << endl;
+            resRoute.pop();
         }
     }
     else
@@ -220,63 +249,11 @@ void print_res(bool found)
     cout << endl;
 }
 
-void debug()
-{
-    words = {
-        "booster",
-        "rooster",
-        "roaster",
-        "coasted",
-        "roasted",
-        "coastal",
-        "postal"};
-
-    // words = {
-    //     "hola",
-    //     "bola",
-    //     "cola",
-    //     "mola",
-    //     "mala",
-    //     "bala",
-    //     "sala",
-    //     "sota",
-    //     "cota",
-    //     "bota",
-    //     "rota"};
-
-    words_size = words.size();
-
-    vector<pair<string, string>> pairs = {
-        {"booster", "roasted"},
-        {"coastal", "postal"}};
-
-    // vector<pair<string, string>> pairs = {
-    //     {"hola", "rota"},
-    //     {"sala", "sota"}};
-
-    res = NULL_RES;
-    for (pair<string, string> word_pair : pairs)
-    {
-        string start = word_pair.first, end = word_pair.second;
-        int startIndex = find(words.begin(), words.end(), start) - words.begin();
-        int endIndex = find(words.begin(), words.end(), end) - words.begin();
-
-        // Reset the visited array
-        memset(visited, false, words_size);
-        bool found = doublet_route(startIndex, endIndex);
-        print_res(found);
-    }
-}
-
 int main()
 {
     // Code for optimization (Unties C and C++ standard streams, which allows you to still use cin/cout, but not scanf/printf)
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
-
-    // CODE FOR DEBUGGING. TODO: DELETE FOR PRODUCTION
-    // debug();
-    // return 0;
 
     string word;
     for (int i = 0; i < MAX_WORDS && getline(cin, word); i++)
@@ -289,10 +266,11 @@ int main()
     }
     words_size = words.size();
 
-    res = NULL_RES;
     string start, end;
     while (cin >> start >> end)
     {
+        res = NULL_RES;
+
         int startIndex = find(words.begin(), words.end(), start) - words.begin();
         int endIndex = find(words.begin(), words.end(), end) - words.begin();
 
