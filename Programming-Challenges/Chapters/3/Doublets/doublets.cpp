@@ -1,19 +1,14 @@
 #include <string>
 #include <vector>
-#include <stack>
-#include <deque>
+#include <queue>
 #include <algorithm>     // sort, mismatch
 #include <unordered_map> // unordered_map = Hash table (access O(1)), map = binary tree (access O(log n))
 #include <iostream>      // cin/cout
-#include <utility>       // pair
 
 using namespace std;
 
 #define MAX_WORDS 25143
 #define MAX_WORD_LEN 16
-
-#define NULL_RES \
-    pair<deque<int>, int> { deque<int>(), 0 }
 
 char words[MAX_WORDS][MAX_WORD_LEN];
 
@@ -23,7 +18,7 @@ int indexToLenMap[MAX_WORD_LEN];
 vector<int> doublets_dict[MAX_WORDS];
 bool doublets_calculated[MAX_WORDS];
 
-pair<deque<int>, int> res;
+int results_linked_list[MAX_WORDS];
 
 int words_size;
 
@@ -73,7 +68,7 @@ vector<int> get_doublets(int wordIndex)
     }
     else
     {
-        vector<int> doublets = doublets_dict[wordIndex];
+        vector<int> doublets;
         int wordLength = indexToLenMap[wordIndex];
         for (auto &doubletPair : wordIndexMap[wordLength])
         {
@@ -84,65 +79,52 @@ vector<int> get_doublets(int wordIndex)
             }
         }
 
+        doublets_dict[wordIndex] = doublets;
         doublets_calculated[wordIndex] = true;
 
         return doublets;
     }
 }
 
-// This is called forward declaration, and it is used so that doublet_route can call bfs, and bfs can call doublet_route as well
-bool doublet_route(int startIndex, int endIndex, int max_len);
-
-bool doublet_route_bfs(int startIndex, int endIndex, int diff)
+bool doublet_route(int startIndex, int endIndex)
 {
-    // TODO: Implement BFS
-}
+    queue<int> check_queue;
+    bool visited[MAX_WORDS] = {};
 
-bool doublet_route(int startIndex, int endIndex, int max_len = 0)
-{
-    if (startIndex == endIndex)
+    check_queue.push(startIndex);
+    visited[startIndex] = true;
+    results_linked_list[startIndex] = -1;
+
+    while (!check_queue.empty())
     {
-        res.first.push_back(startIndex);
-        return true;
-    }
-    else
-    {
-        string start = words[startIndex], end = words[endIndex];
-        int diff = str_diff(start, end);
-        if (diff >= 0)
+        startIndex = check_queue.front();
+        check_queue.pop();
+
+        for (int doubletIndex : get_doublets(startIndex))
         {
-            if (max_len > 0)
+            if (!visited[doubletIndex])
             {
-                if (diff >= max_len - 1 || (diff == max_len - 2 && diff > 1))
-                {
-                    return false;
-                }
+                visited[doubletIndex] = true;
+                results_linked_list[doubletIndex] = startIndex;
+                check_queue.push(doubletIndex);
             }
-
-            if (diff == 1) // diff == 1 is equivalent to are_doublets(start, end)
-            {
-                res.first.push_back(startIndex);
-                res.first.push_back(endIndex);
-                return true;
-            }
-
-            return doublet_route_bfs(startIndex, endIndex, diff);
         }
-        else
+        if (visited[endIndex])
         {
-            return false;
+            return true;
         }
     }
+    return false;
 }
 
-void print_res(bool found)
+void print_res(int startIndex, bool found)
 {
-    if (found && !res.first.empty())
+    if (found)
     {
-        while (!res.first.empty())
+        while (startIndex >= 0)
         {
-            cout << words[res.first.front()] << endl;
-            res.first.pop_front();
+            cout << words[startIndex] << endl;
+            startIndex = results_linked_list[startIndex];
         }
     }
     else
@@ -181,12 +163,11 @@ int main()
     string start, end;
     while (cin >> start >> end)
     {
-        res = NULL_RES;
-
         int startIndex = wordIndexMap[start.length()][start];
         int endIndex = wordIndexMap[end.length()][end];
 
-        bool found = doublet_route(startIndex, endIndex);
-        print_res(found);
+        // Reverse the start and end, because the results will be displayed in reversed order
+        bool found = doublet_route(endIndex, startIndex);
+        print_res(startIndex, found);
     }
 }
