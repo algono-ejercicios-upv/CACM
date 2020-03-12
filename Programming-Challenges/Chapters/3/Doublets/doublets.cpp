@@ -2,10 +2,10 @@
 #include <vector>
 #include <stack>
 #include <deque>
-#include <algorithm> // sort, mismatch
-#include <map>
-#include <iostream> // cin/cout
-#include <utility> // pair
+#include <algorithm>     // sort, mismatch
+#include <unordered_map> // unordered_map = Hash table (access O(1)), map = binary tree (access O(log n))
+#include <iostream>      // cin/cout
+#include <utility>       // pair
 
 using namespace std;
 
@@ -15,14 +15,17 @@ using namespace std;
 #define NULL_RES \
     pair<deque<int>, int> { deque<int>(), 0 }
 
-vector<string> words;
-pair<deque<int>, int> res;
-bool visited[MAX_WORDS];
+char words[MAX_WORDS][MAX_WORD_LEN];
 
-map<int, vector<int>> doublets_dict;
+unordered_map<string, int> wordIndexMap[MAX_WORD_LEN];
+int indexToLenMap[MAX_WORD_LEN];
+
+vector<int> doublets_dict[MAX_WORDS];
 bool doublets_calculated[MAX_WORDS];
 
-int words_size = MAX_WORDS;
+pair<deque<int>, int> res;
+
+int words_size;
 
 int str_diff(string one, string two)
 {
@@ -45,38 +48,21 @@ int str_diff(string one, string two)
     }
 }
 
-int str_inc(string ref, string before, string after)
+bool are_doublets(int one, int two, int len)
 {
-    return str_diff(after, ref) - str_diff(before, ref);
-}
-
-bool cmp_diff(string ref, string one, string two)
-{
-    return (str_diff(ref, one) < str_diff(ref, two));
-}
-
-bool are_doublets(string one, string two)
-{
-    if (one.length() == two.length())
+    int diff = 0;
+    for (int i = 0; i < len; i++)
     {
-        int diff = 0;
-        for (int i = 0; i < one.length(); i++)
+        char l_one = words[one][i], l_two = words[two][i];
+        if (l_one != l_two)
         {
-            char l_one = one[i], l_two = two[i];
-            if (l_one != l_two)
+            if (++diff > 1)
             {
-                if (++diff > 1)
-                {
-                    return false;
-                }
+                return false;
             }
         }
-        return diff == 1;
     }
-    else
-    {
-        return false;
-    }
+    return diff == 1;
 }
 
 vector<int> get_doublets(int wordIndex)
@@ -87,105 +73,29 @@ vector<int> get_doublets(int wordIndex)
     }
     else
     {
-        vector<int> doublets = {};
-        for (int i = 0; i < words_size; i++)
+        vector<int> doublets = doublets_dict[wordIndex];
+        int wordLength = indexToLenMap[wordIndex];
+        for (auto &doubletPair : wordIndexMap[wordLength])
         {
-            if (are_doublets(words[wordIndex], words[i]))
+            int doubletIndex = doubletPair.second;
+            if (are_doublets(wordIndex, doubletIndex, wordLength))
             {
-                doublets.push_back(i);
+                doublets.push_back(doubletIndex);
             }
         }
 
-        doublets_dict[wordIndex] = doublets;
         doublets_calculated[wordIndex] = true;
-        
+
         return doublets;
     }
 }
 
-// This is called forward declaration, and it is used so that doublet_route can call dfs and bfs, and they can call doublet_route as well
+// This is called forward declaration, and it is used so that doublet_route can call bfs, and bfs can call doublet_route as well
 bool doublet_route(int startIndex, int endIndex, int max_len);
 
-bool doublet_route_dfs(int startIndex, int endIndex, int diff)
+bool doublet_route_bfs(int startIndex, int endIndex, int diff)
 {
-    vector<int> doublets = get_doublets(startIndex);
-    if (doublets.empty())
-    {
-        return false;
-    }
-
-    string start = words[startIndex];
-    sort(doublets.begin(), doublets.end(), [start](int i, int j) -> bool { return cmp_diff(start, words[i], words[j]); });
-
-    int min_len = 0;
-    string end = words[endIndex];
-    int initResSize = res.first.size(), initInc = res.second;
-    stack<int> bestRes;
-    int bestInc;
-    bool anyFound;
-    for (int i = 0; i < doublets.size(); i++)
-    {
-        int doubletIndex = doublets[i];
-        if (!visited[doubletIndex])
-        {
-            int actual_inc = str_inc(end, start, words[doubletIndex]);
-
-            res.first.push_back(startIndex);
-            res.second += actual_inc;
-
-            visited[startIndex] = true;
-
-            bool found = doublet_route(doubletIndex, endIndex, min_len);
-
-            // visited should only be considered for the current path (because other paths containing this index could be shorter)
-            visited[startIndex] = false;
-
-            int nextSize = res.first.size() - initResSize;
-            if (found)
-            {
-                anyFound = true;
-
-                if (res.second == -(diff))
-                {
-                    return true;
-                }
-                // We dont need to check if next_res.first len is lower than the previous one,
-                // as it is already checked so that in case it was, next_res.first would be empty
-                min_len = res.first.size();
-
-                // Undoing next steps, and keeping them as the best ones yet (if they are)
-                bestRes = stack<int>{};
-                for (int j = 0; j < nextSize; j++)
-                {
-                    bestRes.push(res.first.back());
-
-                    res.first.pop_back();
-                }
-                bestInc = res.second - initInc;
-                res.second = initInc;
-            }
-            else
-            {
-                // Undoing next steps without keeping them (as they are not a solution)
-                for (int j = 0; j < nextSize; j++)
-                {
-                    res.first.pop_back();
-                }
-            }
-        }
-    }
-
-    if (anyFound)
-    {
-        while (!bestRes.empty())
-        {
-            res.first.push_back(bestRes.top());
-            bestRes.pop();
-        }
-        res.second += bestInc;
-    }
-
-    return anyFound;
+    // TODO: Implement BFS
 }
 
 bool doublet_route(int startIndex, int endIndex, int max_len = 0)
@@ -216,7 +126,7 @@ bool doublet_route(int startIndex, int endIndex, int max_len = 0)
                 return true;
             }
 
-            return doublet_route_dfs(startIndex, endIndex, diff);
+            return doublet_route_bfs(startIndex, endIndex, diff);
         }
         else
         {
@@ -249,23 +159,32 @@ int main()
     cin.tie(NULL);
 
     string word;
+    words_size = 0;
     for (int i = 0; i < MAX_WORDS && getline(cin, word); i++)
     {
         if (word.empty())
         {
             break;
         }
-        words.push_back(word);
+
+        int word_length = word.length();
+
+        for (int j = 0; j < word_length; j++)
+        {
+            words[i][j] = word[j];
+        }
+        wordIndexMap[word_length][word] = i;
+        indexToLenMap[i] = word_length;
+        words_size++;
     }
-    words_size = words.size();
 
     string start, end;
     while (cin >> start >> end)
     {
         res = NULL_RES;
 
-        int startIndex = find(words.begin(), words.end(), start) - words.begin();
-        int endIndex = find(words.begin(), words.end(), end) - words.begin();
+        int startIndex = wordIndexMap[start.length()][start];
+        int endIndex = wordIndexMap[end.length()][end];
 
         bool found = doublet_route(startIndex, endIndex);
         print_res(found);
