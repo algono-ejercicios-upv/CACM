@@ -12,8 +12,8 @@ using namespace std;
 
 char words[MAX_WORDS][MAX_WORD_LEN];
 
-unordered_map<string, int> wordIndexMap[MAX_WORD_LEN];
-int indexToLenMap[MAX_WORD_LEN];
+unordered_map<string, int> wordIndexMap[MAX_WORD_LEN+1];
+int indexToLenMap[MAX_WORDS];
 
 vector<int> doublets_dict[MAX_WORDS];
 bool doublets_calculated[MAX_WORDS];
@@ -129,9 +129,8 @@ void print_res(int startIndex, bool found)
     }
     else
     {
-        cout << "No solution" << endl;
+        cout << "No solution." << endl;
     }
-    cout << endl;
 }
 
 int main()
@@ -160,9 +159,13 @@ int main()
         words_size++;
     }
 
+    bool notFirst = false;
     string start, end;
     while (cin >> start >> end)
     {
+        if (notFirst) { cout << endl; } // Print a new line between cases
+        else { notFirst = true; }
+
         int startIndex = wordIndexMap[start.length()][start];
         int endIndex = wordIndexMap[end.length()][end];
 
