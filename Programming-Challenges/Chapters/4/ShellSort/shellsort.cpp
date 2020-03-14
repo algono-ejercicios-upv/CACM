@@ -1,5 +1,5 @@
 #include <string>
-#include <vector>
+#include <set>
 #include <iostream>      // for cin / cout (standard input/output)
 #include <unordered_map> // hash table (access O(1))
 #include <algorithm>     // sort
@@ -15,25 +15,36 @@ unordered_map<string, int> required;
 
 int dist[MAX_TURTLES];
 
-vector<int> results;
-
-vector<int> shellSort()
+struct resultComparator
 {
-    results = {};
+    inline bool operator()(const int &left, const int &right)
+    {
+        return required[original[left]] > required[original[right]];
+    }
+};
+
+set<int, resultComparator> results;
+
+set<int, resultComparator> shellSort()
+{
+    results = set<int, resultComparator>{};
     for (int i = 0; i < numberOfTurtles; i++)
     {
         dist[i] = required[original[i]] - i;
         if (dist[i] < 0)
         {
-            results.push_back(i);
+            results.insert(i);
             int reduction = 1;
             for (int j = i - 1; j >= 0; j--)
             {
-                dist[j] -= reduction;
-                if (dist[j] < 0)
+                if (dist[j] >= 0)
                 {
-                    results.push_back(j);
-                    reduction++;
+                    dist[j] -= reduction;
+                    if (dist[j] < 0)
+                    {
+                        results.insert(j);
+                        reduction++;
+                    }
                 }
             }
         }
@@ -41,15 +52,8 @@ vector<int> shellSort()
     return results;
 }
 
-int greaterRequiredPos(int i, int j)
+void printResults(set<int, resultComparator> results)
 {
-    return required[original[i]] > required[original[j]];
-}
-
-void printResults(vector<int> results)
-{
-    sort(results.begin(), results.end(), greaterRequiredPos);
-
     for (int resultIndex : results)
     {
         cout << original[resultIndex] << '\n';
@@ -67,7 +71,6 @@ int main()
     int testCases;
     cin >> testCases;
 
-    bool notFirst = false;
     for (int i = 0; i < testCases; i++)
     {
         cin >> numberOfTurtles;
@@ -84,15 +87,7 @@ int main()
             required[turtle] = j;
         }
 
-        if (notFirst)
-        {
-            cout << '\n';
-        } // Print a new line between cases
-        else
-        {
-            notFirst = true;
-        }
-
         printResults(shellSort());
+        cout << '\n'; // Print a blank line after each test case
     }
 }
