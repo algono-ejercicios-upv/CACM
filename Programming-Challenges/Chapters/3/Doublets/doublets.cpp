@@ -123,13 +123,13 @@ void print_res(int startIndex, bool found)
     {
         while (startIndex >= 0)
         {
-            cout << words[startIndex] << endl;
+            cout << words[startIndex] << '\n';
             startIndex = results_linked_list[startIndex];
         }
     }
     else
     {
-        cout << "No solution." << endl;
+        cout << "No solution." << '\n';
     }
 }
 
@@ -163,7 +163,7 @@ int main()
     string start, end;
     while (cin >> start >> end)
     {
-        if (notFirst) { cout << endl; } // Print a new line between cases
+        if (notFirst) { cout << '\n'; } // Print a new line between cases
         else { notFirst = true; }
 
         int startIndex = wordIndexMap[start.length()][start];

@@ -51,6 +51,6 @@ int main() {
                 reachable = is_reachable(0, i);
             }
         }
-        cout << (reachable ? "REACHABLE" : "GARDEN OF EDEN") << endl;
+        cout << (reachable ? "REACHABLE" : "GARDEN OF EDEN") << '\n';
     }
 }
