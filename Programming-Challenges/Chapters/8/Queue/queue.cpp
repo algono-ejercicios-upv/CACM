@@ -1,90 +1,64 @@
 #include <iostream>  // cin / cout
-#include <algorithm> // next_permutation
 
 using namespace std;
 
 #define MAX_CASES 10000
 #define MAX_PEOPLE 13
 
-int n;
+// precomputedResults[n][p][r]
+int precomputedResults[MAX_PEOPLE+1][MAX_PEOPLE+1][MAX_PEOPLE+1];
+bool resultsAvailable[MAX_PEOPLE+1][MAX_PEOPLE+1][MAX_PEOPLE+1];
 
-// Important: Each person has a different height
-int people[MAX_PEOPLE];
-
-// P valid if all members to the left are lower than this one
-bool pValid(int pos)
+int permutations_base(int n, int p, int r)
 {
-    for (int i = pos - 1; i >= 0; i--)
-    {
-        if (people[i] >= people[pos])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-// R valid if all members to the right are lower than this one
-bool rValid(int pos)
-{
-    for (int i = pos + 1; i < n; i++)
-    {
-        if (people[i] >= people[pos])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool valid(int p, int r)
-{
-    int cp = 0, cr = 0;
-    for (int i = 0; i < n; i++)
-    {
-        if (pValid(i))
-        {
-            if (++cp > p) { return false; }
-        }
-        if (rValid(i))
-        {
-            if (++cr > r) { return false; }
-        }
-    }
-    return p == cp && r == cr;
-}
-
-// 1 <= n <= 13
-int permutations(const int p, const int r)
-{
-    if (p < 1 || r < 1)
+    if (p < 1 || r < 1 || p > n || r > n)
     {
         return 0;
     }
-    int result = 0;
-
-    // Fill order must be ascending for all permutations to be checked (0-1-2) -> (2-1-0)
-    for (int i = 0; i < n; i++)
+    else if (p == n)
     {
-        people[i] = i;
+        return (r == 1) ? 1 : 0;
     }
-
-    do
+    else if (r == n)
     {
-        if (valid(p, r))
-        {
-            result++;
-        }
-    } while (next_permutation(people, people + n));
-
-    return result;
+        return (p == 1) ? 1 : 0;
+    }
+    else if (n == 1)
+    {
+        return (p == 1 && r == 1) ? 1 : 0;
+    }
+    else if (n == 2)
+    {
+        return p ^ r; // p xor r
+    }
+    else
+    {
+        return -1; // No base solution
+    }
 }
 
-int debug()
+// 1 <= n <= 13
+int permutations(int n, int p, int r)
 {
-    n = 3;
-    cout << permutations(1, 2) << endl;
-    return 0;
+    int res = permutations_base(n, p, r);
+    if (res < 0) // Wasn't a base case, do recursive calculation
+    {
+        if (resultsAvailable[n][p][r])
+        {
+            return precomputedResults[n][p][r];
+        }
+        else
+        {
+            // Position of person with min height: 1 time first, (n-2) times middle, and 1 time last
+            // Thus, 1 * first + (n-2) * middle + 1 * last
+            res = permutations(n - 1, p - 1, r) + (n - 2) * permutations(n - 1, p, r) + permutations(n - 1, p, r - 1);
+
+            // Add res to precomputed results
+            precomputedResults[n][p][r] = res;
+            resultsAvailable[n][p][r] = true;
+        }
+    }
+    return res;
 }
 
 int main()
@@ -93,16 +67,14 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 
-    //return debug();
-
     // Get data from input
 
     int testCases;
     cin >> testCases;
 
-    int p, r;
+    int n, p, r;
     for (int i = 0; i < testCases && cin >> n >> p >> r; i++)
     {
-        cout << permutations(p, r) << '\n';
+        cout << permutations(n, p, r) << '\n';
     }
 }
