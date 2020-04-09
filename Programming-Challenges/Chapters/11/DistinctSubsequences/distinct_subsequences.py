@@ -1,18 +1,19 @@
 def number_of_subsequences(word: str, subsequence: str):
-    dp = [[0] * len(word) for _ in range(len(subsequence))]
-    for i, sub_letter_matches in enumerate(dp):
-        for j, word_letter_matches in enumerate(sub_letter_matches):
+    dp = [[] for _ in range(len(subsequence))]
+    for i in range(len(subsequence)):
+        acc = 0
+        for j in range(i, len(word)):
+            v = 0
             if subsequence[i] == word[j]:
                 if i > 0:
-                    ci, cj = i-1, j-1
-                    while cj >= 0:
-                        word_letter_matches += dp[ci][cj]
-                        cj -= 1
+                    # No need to check if j > 0, cause we know that j >= i is always True
+                    v = dp[i-1][j-i]
                 else:
-                    word_letter_matches = 1
-                dp[i][j] = word_letter_matches
-    print(dp)
-    return sum(dp[-1])
+                    v = 1
+            acc += v
+            dp[i].append(acc)
+    #print(dp)
+    return acc
 
 def main():
     try:
